@@ -27,7 +27,7 @@ class SteamClient:
 
     def get_global_achievements(self, app_id: int) -> list[dict]:
         """
-        Fetch global achievement percentages for a Steam app
+        Fetch global achievement percentages for an app
         """
         payload = self._get(
             endpoint="ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/",
