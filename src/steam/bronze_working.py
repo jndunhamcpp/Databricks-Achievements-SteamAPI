@@ -3,15 +3,15 @@ import sys
 import random
 import time
 from pyspark.sql import functions as F
-from src.steamspy.client import SteamSpyAPI
 from src.steam.client import SteamClient
 from src.config.settings import (
     BRONZE_FLUSH_EVERY,
     STEAM_API_KEY,
     STEAM_BASE_URL,
+    MIN_ACHIEVEMENTS
 )
 
-def pull_games_steampy(spark):
+def steamspy(spark):
     all_apps = {}
     page = 0
 
@@ -62,36 +62,37 @@ def pull_games_steampy(spark):
         .format("delta") \
         .saveAsTable("bronze.steamspy")
 
-def pull_achievements(spark):
+def steamapi(spark):
     steam = SteamClient(
         base_url=STEAM_BASE_URL,
         api_key=STEAM_API_KEY
     )
 
-    apps_df = spark.table("bronze.steamspy")
-
-    rows = [
-        (row.appid, row.game_name)
-        for row in apps_df.select("appid", "game_name").collect()
-    ]
-
+    # shuffle BEFORE Spark
     random.shuffle(rows)
 
-    results = []
+    # --- Create Spark DataFrame (optional persistence) ---
+    apps_df = spark.createDataFrame(rows, ["appid", "game_name"])
 
-    for app_id, name in rows:
+    # --- Driver-side filtering with Steam API ---
+    qualified_games = []
+
+    for idx, (app_id, name) in enumerate(rows, start=1):
         try:
             count = steam.get_achievement_count(app_id)
-            results.append((app_id, name, count))
+            if count >= MIN_ACHIEVEMENTS:
+                qualified_games.append((app_id, name))
             time.sleep(0.05)
         except Exception:
-            results.append((app_id, name, None))
+            continue
 
-
-    games_df = spark.createDataFrame(results, schema)
+    # --- Persist results ---
+    games_df = spark.createDataFrame(
+        qualified_games,
+        ["AppId", "GameName"]
+    )
 
     games_df.write \
         .mode("overwrite") \
         .format("delta") \
-        .saveAsTable("bronze.achievements")
-
+        .saveAsTable("bronze.games_sample")

@@ -48,23 +48,6 @@ class SteamClient:
         response.raise_for_status()
         return response.json()["applist"]["apps"]
 
-    def get_achievement_count(self, app_id: int) -> int:
-        """
-        Fetch number of achievements for a Steam app
-        """
-        payload = self._get(
-            endpoint="ISteamUserStats/GetSchemaForGame/v2/",
-            params={"appid": app_id}
-        )
-
-        achievements = (
-            payload
-            .get("game", {})
-            .get("availableGameStats", {})
-            .get("achievements", [])
-        )
-
-        return len(achievements)
     
     def get_number_of_current_players(self, app_id: int) -> int:
         """
