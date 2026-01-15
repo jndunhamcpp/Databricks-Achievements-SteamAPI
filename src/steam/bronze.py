@@ -10,9 +10,14 @@ from src.config.settings import (
     BRONZE_FLUSH_EVERY,
     STEAM_API_KEY,
     STEAM_BASE_URL,
+    MAX_STEAM_CALLS
 )
 
 def pull_games_steampy(spark):
+    """
+    Pull all games from Steam in the form ["appid", "game_name"]
+    from the SteamSpy API.
+    """
     all_apps = {}
     page = 0
 
@@ -66,8 +71,8 @@ def pull_games_steampy(spark):
 
 def pull_achievements(spark):
     """
-    Pull global achievement percentages + current player counts
-    for all Steam apps and store them in bronze.steam_global_achievements
+    Pull global achievement percentages + current player count for each game.
+    from Steam PI
     """
 
     steam_client = SteamClient(
@@ -83,14 +88,20 @@ def pull_achievements(spark):
 
     rows = []
     total_apps = len(apps)
+    call_count = 0
 
     for idx, app in enumerate(apps, start=1):
         appid = app.appid
         game_name = app.game_name
 
+        if call_count >= MAX_STEAM_CALLS:
+            break
+
         try:
             player_count = steam_client.get_number_of_current_players(appid)
+            call_count += 1
             achievements = steam_client.get_global_achievements(appid)
+            call_count += 1
 
             for ach in achievements:
                 rows.append(
@@ -105,6 +116,7 @@ def pull_achievements(spark):
 
         except Exception as e:
             print(f"Failed achievements for appid {appid}: {e}")
+            call_count += 1
 
         if len(rows) >= BRONZE_FLUSH_EVERY:
             spark.createDataFrame(rows) \

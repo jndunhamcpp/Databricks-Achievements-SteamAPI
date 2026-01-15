@@ -4,3 +4,4 @@ STEAM_BASE_URL = "https://api.steampowered.com"
 MIN_ACHIEVEMENTS = 10
 BRONZE_FLUSH_EVERY = 25
 MIN_CURRENT_PLAYERS = 1
+MAX_STEAM_CALLS = 100000 # max steam calls per 24 hours

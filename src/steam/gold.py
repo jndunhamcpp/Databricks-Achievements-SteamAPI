@@ -1,3 +1,6 @@
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+
 def build_gold_app_achievement_summary(spark):
     silver_df = spark.table("silver.global_achievements")
 
@@ -38,7 +41,6 @@ def build_gold_hardest_achievements(spark):
         .mode("overwrite") \
         .format("delta") \
         .saveAsTable("gold.hardest_achievements")
-
 
 def build_gold_completion_friendly_games(spark):
     silver_df = spark.table("silver.global_achievements")
