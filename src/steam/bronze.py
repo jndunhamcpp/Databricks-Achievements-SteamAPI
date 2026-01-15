@@ -3,6 +3,7 @@ import sys
 import random
 import time
 from pyspark.sql import functions as F
+from pyspark.sql import Row
 from src.steamspy.client import SteamSpyAPI
 from src.steam.client import SteamClient
 from src.config.settings import (
@@ -62,36 +63,67 @@ def pull_games_steampy(spark):
         .format("delta") \
         .saveAsTable("bronze.steamspy")
 
+
 def pull_achievements(spark):
-    steam = SteamClient(
+    """
+    Pull global achievement percentages + current player counts
+    for all Steam apps and store them in bronze.steam_global_achievements
+    """
+
+    steam_client = SteamClient(
         base_url=STEAM_BASE_URL,
-        api_key=STEAM_API_KEY
+        api_key=STEAM_API_KEY,
     )
 
-    apps_df = spark.table("bronze.steamspy")
+    apps = (
+        spark.table("bronze.steamspy")
+        .select("appid", "game_name")
+        .collect()
+    )
 
-    rows = [
-        (row.appid, row.game_name)
-        for row in apps_df.select("appid", "game_name").collect()
-    ]
+    rows = []
+    total_apps = len(apps)
 
-    random.shuffle(rows)
+    for idx, app in enumerate(apps, start=1):
+        appid = app.appid
+        game_name = app.game_name
 
-    results = []
-
-    for app_id, name in rows:
         try:
-            count = steam.get_achievement_count(app_id)
-            results.append((app_id, name, count))
-            time.sleep(0.05)
-        except Exception:
-            results.append((app_id, name, None))
+            player_count = steam_client.get_number_of_current_players(appid)
+            achievements = steam_client.get_global_achievements(appid)
 
+            for ach in achievements:
+                rows.append(
+                    Row(
+                        appid=appid,
+                        game_name=game_name,
+                        achievement_name=ach.get("name"),
+                        percent=float(ach.get("percent", 0.0)),
+                        player_count=player_count,
+                    )
+                )
 
-    games_df = spark.createDataFrame(results, schema)
+        except Exception as e:
+            print(f"Failed achievements for appid {appid}: {e}")
 
-    games_df.write \
-        .mode("overwrite") \
-        .format("delta") \
-        .saveAsTable("bronze.achievements")
+        if len(rows) >= BRONZE_FLUSH_EVERY:
+            spark.createDataFrame(rows) \
+                .write \
+                .mode("append") \
+                .format("delta") \
+                .saveAsTable("bronze.steam_global_achievements")
+
+            print(f"Flushed {len(rows)} rows at app {idx}/{total_apps}")
+            rows.clear()
+
+        time.sleep(0.2)
+
+    if rows:
+        spark.createDataFrame(rows) \
+            .write \
+            .mode("append") \
+            .format("delta") \
+            .saveAsTable("bronze.steam_global_achievements")
+
+    print(f"Finished ingesting achievements for {total_apps} apps")
 
