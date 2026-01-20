@@ -6,7 +6,6 @@ Upon completion of the ingestion process the user will have delta tables contain
 - ~87,000 unique games/applications
 - ~1.8 million rows of achievement data
 
-
 ## Purpose
 
 The purpose behind this was to gather data on achievements for all of the games available in the Steam library and answer the following questions:
@@ -14,34 +13,6 @@ The purpose behind this was to gather data on achievements for all of the games 
 - Which games have the most difficult achievements?
 - Which games are the easiest to 100% complete?
 - What is the achievement breakdown for each game?
-
-
-## Repository Structure
-
-```
-Databricks-Achievements-SteamAPI/
-│
-├── notebooks/
-│   ├── 01_bronze/
-│   │   └── ingest_steam_apps.ipynb
-│   ├── 02_silver/
-│   │   └── build_steam_games.ipynb
-│   ├── 03_gold/
-│   │   └── build_gold_games.ipynb
-│   └── testing/
-│       └── api_test.ipynb
-│
-├── src/
-│   ├── config/
-│   │   └── settings.py
-│   └── steam/
-│       ├── client.py
-│       ├── bronze.py
-│       ├── silver.py
-│       └── gold.py
-│
-└── README.md
-```
 
 
 ## Python Modules (`src/`)
