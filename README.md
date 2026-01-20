@@ -38,10 +38,9 @@ The `src` directory contains reusable pipeline logic that can be imported into D
 
 ##  Setup
 
-1. Import the notebooks into your Databricks workspace
-2. Upload the `src/` directory or install it as a workspace library
-3. Configure any required settings in `src/config/settings.py`
-4. Run notebooks in order:
+1. Import the repo into Databricks.
+2. Configure any required settings in `src/config/settings.py`.
+3. Run notebooks in order:
    1. Bronze
    2. Silver
    3. Gold
