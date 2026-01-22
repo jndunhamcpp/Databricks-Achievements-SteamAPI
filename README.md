@@ -65,6 +65,4 @@ Because of this I have opted to use Steam's `GetNumberOfCurrentPlayers` from the
 3. Run `pull_achievements_steam()`
 
 ##  PowerBI Charts
-<img src="images/1.JPG" width="1100" />
-<img src="images/2.JPG" width="1100" />
-<img src="images/3.png" width="1100" />
+<img src="images/4.JPG" width="1100" />
