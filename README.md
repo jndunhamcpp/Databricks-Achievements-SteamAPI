@@ -1,7 +1,7 @@
 # Databricks Achievements – Steam API Pipeline
 
-This repository is an end-to-end medallion architecture data pipeline built on **Databricks**, using both the **Steam Web API** and **SteamSpy API** as data sources. <br>
-Upon completion of the ingestion process the user will have delta tables containing:
+This repository is an ETL pipeline built on **Databricks**, using both the **Steam Web API** and **SteamSpy API** as data sources. <br>
+After completion of the ingestion process the user will have delta tables containing:
 
 - ~87,000 unique games/applications
 - ~1.8 million rows of achievement data
